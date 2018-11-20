@@ -6,6 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.stereotype.Repository;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
@@ -22,6 +23,9 @@ public class CustomerRepository {
 
 	@Autowired
 	private DynamoDBMapper mapper;
+	
+	private HashOperations<String, String, Customer> hashOperations;
+	private static final String KEY = "customer";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CustomerRepository.class);
 
@@ -38,14 +42,13 @@ public class CustomerRepository {
 		}
 	}
 
-	public String findOne(String customerId) {
-		//mapper.load(Customer.class, customerId, lastName);
-		//mapper.load(customerId);
-		mapper.load(Customer.class, customerId);
-		return mapper.toString();
+	public Customer findOne(String customerId) {
+		Customer customer=mapper.load(Customer.class, customerId);
+		return customer;
 	}
 
-	public void delete(Customer customer) {
+	public void deleteById(String customerId) {
+		Customer customer=mapper.load(Customer.class, customerId);
 		mapper.delete(customer);
 	}
 
@@ -58,11 +61,16 @@ public class CustomerRepository {
 		return saveExpression;
 	}
 
-	public DynamoDBMapper findAll() {
-		return mapper;
+	public Customer findAll() {
+		return mapper.load(Customer.class, "Customer");
 	}
 
-	public DeleteTableRequest deleteAll() {
-		return mapper.generateDeleteTableRequest(Customer.class);
+	/*public Map<String, Customer> findAll() {
+		return hashOperations.entries("Customer");
+	}*/
+	
+	public void deleteAll() {
+	//return mapper.generateDeleteTableRequest(Customer.class);
+	 mapper.generateDeleteTableRequest(Customer.class);
 	}
 }

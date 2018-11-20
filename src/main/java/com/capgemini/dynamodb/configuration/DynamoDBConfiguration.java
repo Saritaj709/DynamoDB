@@ -4,6 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericToStringSerializer;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -26,18 +29,6 @@ public class DynamoDBConfiguration {
 
 	@Value("${amazon.dynamodb.region}")
 	private String awsRegion;
-	/*
-	 * @Bean public AmazonDynamoDB amazonDynamoDB() { AmazonDynamoDB amazonDynamoDB
-	 * = new AmazonDynamoDBClient(amazonAWSCredentials());
-	 * 
-	 * if (!StringUtils.isEmpty(amazonDynamoDBEndpoint)) {
-	 * amazonDynamoDB.setEndpoint(amazonDynamoDBEndpoint); }
-	 * 
-	 * return amazonDynamoDB; }
-	 * 
-	 * @Bean public AWSCredentials amazonAWSCredentials() { return new
-	 * BasicAWSCredentials(amazonAWSAccessKey, amazonAWSSecretKey); }
-	 */
 
 	@Autowired
 	private AmazonDynamoDB dynamoDB;
@@ -54,6 +45,19 @@ public class DynamoDBConfiguration {
 				.withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKey, awsSecretKey)))
 				.build();
 
+	}
+	
+	@Bean
+	JedisConnectionFactory jedisConnectionFactory() {
+		return new JedisConnectionFactory();
+	}
+
+	@Bean
+	public RedisTemplate<String, Object> redisTemplate() {
+		final RedisTemplate<String, Object> template = new RedisTemplate<String, Object>();
+		template.setConnectionFactory(jedisConnectionFactory());
+		template.setValueSerializer(new GenericToStringSerializer<Object>(Object.class));
+		return template;
 	}
 
 }
